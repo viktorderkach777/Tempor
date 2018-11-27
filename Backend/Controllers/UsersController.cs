@@ -14,14 +14,20 @@ namespace Backend.Controllers
     [EnableCors(origins: "http://localhost:3000", headers: "*", methods: "*")]
     public class UsersController : ApiController
     {
-        public SignupResultModel Post(SignupBindingModel model)
+        public IHttpActionResult /*HttpResponseMessage*/ Post(SignupBindingModel model)
         {
+            bool isValid = true;
             ErrorsSignupBindingModel errors = new ErrorsSignupBindingModel();
-            if(string.IsNullOrEmpty(model.UserName))
+            if (string.IsNullOrEmpty(model.UserName))
+            {
                 errors.username = "This field is required";
-
+                isValid = false;
+            }
             if (string.IsNullOrEmpty(model.Email))
+            {
                 errors.email = "This field is required";
+                isValid = false;
+            }
             try
             {
                 MailAddress emailAddress = new MailAddress(model.Email);
@@ -29,23 +35,34 @@ namespace Backend.Controllers
             catch
             {
                 errors.email = "Email is invalid";
+                isValid = false;
             }
             if (string.IsNullOrEmpty(model.Password))
+            {
                 errors.password = "This field is required";
+                isValid = false;
+            }
             if (!model.Password.Equals(model.PasswordConfirmation))
+            {
                 errors.passwordConfirmation = "Passwords must match";
+                isValid = false;
+            }
             if (string.IsNullOrEmpty(model.Timezone))
+            {
                 errors.timezone = "This field is required";
+                isValid = false;
+            }
             SignupResultModel result = new SignupResultModel
             {
                 errors = errors,
-                isValid = false
+                isValid = isValid
             };
-            if (!ModelState.IsValid)
-            {
-                return result;
-            }
-            return result;
+            if (!isValid)
+                return Content(HttpStatusCode.BadRequest, result);
+            //return Request.CreateResponse(HttpStatusCode.BadRequest, result);
+            else
+                return Content(HttpStatusCode.OK, new { success = true });
+            //return Request.CreateResponse(HttpStatusCode.OK, new { success=true });
         }
     }
 }
