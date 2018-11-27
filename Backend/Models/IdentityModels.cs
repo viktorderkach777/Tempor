@@ -1,4 +1,7 @@
-﻿using System.Security.Claims;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Data.Entity;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
@@ -30,5 +33,30 @@ namespace Backend.Models
         {
             return new ApplicationDbContext();
         }
+        public DbSet<SignupUser> SignupUser { get; set; }
+    }
+    [Table("tblSignupUser")]
+    public class SignupUser
+    {
+        [Required]
+        [Key]
+        [StringLength(maximumLength: 255)]
+        public string UserName { get; set; }
+
+        [Required]
+        [StringLength(maximumLength: 255)]
+        public string Email { get; set; }
+
+        [Required]
+        [StringLength(maximumLength: 255)]
+        public string Timezone { get; set; }
+
+        [Required]
+        [StringLength(maximumLength: 255)]
+        public string Password { get; set; }
+
+        [Required]
+        [StringLength(maximumLength: 255)]
+        public string PasswordSalt { get; set; }
     }
 }

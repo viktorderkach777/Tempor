@@ -1,5 +1,6 @@
 ﻿using Backend.Models;
 using Newtonsoft.Json;
+using SimpleCrypto;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,7 @@ using System.Web.Http.Cors;
 
 namespace Backend.Controllers
 {
+    [RoutePrefix("api/Users")]
     [EnableCors(origins: "http://localhost:3000", headers: "*", methods: "*")]
     public class UsersController : ApiController
     {
@@ -60,9 +62,47 @@ namespace Backend.Controllers
             if (!isValid)
                 return Content(HttpStatusCode.BadRequest, result);
             //return Request.CreateResponse(HttpStatusCode.BadRequest, result);
-            else
-                return Content(HttpStatusCode.OK, new { success = true });
+
+            ICryptoService cryptoService = new PBKDF2();
+            //save this salt to the database
+            string salt = cryptoService.GenerateSalt();
+            //save this hash to the database
+            string hashedPassword = cryptoService.Compute(model.Password);
+
+            SignupUser signup = new SignupUser
+            {
+                Email = model.Email,
+                Password = hashedPassword,
+                PasswordSalt = salt,
+                Timezone = model.Timezone,
+                UserName = model.UserName
+            };
+            try
+            {
+                using (ApplicationDbContext context = new ApplicationDbContext())
+                {
+                    context.SignupUser.Add(signup);
+                    context.SaveChanges();
+                    return Content(HttpStatusCode.OK, new { success = true });
+                }
+            }
+            catch(Exception ex)
+            {
+                return Content(HttpStatusCode.InternalServerError, new { error = ex });
+            }
+
+            
             //return Request.CreateResponse(HttpStatusCode.OK, new { success=true });
+        }
+
+        [Route("{identifier}")]
+        public IHttpActionResult Get(string identifier)
+        {
+            using (ApplicationDbContext context = new ApplicationDbContext())
+            {
+                var user = context.SignupUser.SingleOrDefault(u=>u.Email==identifier || u.UserName==identifier);
+                return Content(HttpStatusCode.OK, new { user=user });
+            }
         }
     }
 }
