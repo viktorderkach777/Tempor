@@ -49,4 +49,10 @@ namespace Backend.Models
 
         public string passwordConfirmation { get; set; }
     }
+    public class ErrorsLoginModel
+    {
+        public string identifier { get; set; }
+
+        public string password { get; set; }
+    }
 }
