@@ -7,6 +7,8 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Mail;
+using System.Text;
+using System.Web;
 using System.Web.Http;
 using System.Web.Http.Cors;
 
@@ -62,6 +64,24 @@ namespace Backend.Controllers
             if (!isValid)
                 return Content(HttpStatusCode.BadRequest, result);
             //return Request.CreateResponse(HttpStatusCode.BadRequest, result);
+
+            HttpClient client = new HttpClient();
+            string jsonObject = JsonConvert.SerializeObject(new
+            {
+                Email = model.Email,
+                Password = model.Password,
+                ConfirmPassword = model.Password
+            });
+
+            var request = HttpContext.Current.Request;
+            var url = request.Url.GetLeftPart(UriPartial.Authority) + 
+                request.ApplicationPath + "/api/Account/Register";
+            var content = new StringContent(jsonObject, Encoding.UTF8, "application/json");
+            var response = client.PostAsync(url, content).Result;
+            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            {
+                return Content(HttpStatusCode.BadRequest, result);
+            }
 
             ICryptoService cryptoService = new PBKDF2();
             //save this salt to the database
